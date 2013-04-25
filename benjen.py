@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from glob import glob
-import codecs, datetime, re, shutil, sys, yaml
+import codecs, datetime, re, shutil, sys, yaml, os.path
 from markdown import Markdown
 from functools import partial
 from mako.lookup import TemplateLookup
@@ -21,6 +21,7 @@ class Benjen(object):
         self.load_entries()
         self.generate_indexes()
         map(self.generate_post, self.entries)
+        self.generate_statics()
         self.generate_rss()
     
     def render(self, name, **kwargs):
@@ -70,6 +71,15 @@ class Benjen(object):
     def generate_post(self, post):
         with codecs.open(self.out + post['link'], 'w', 'utf-8') as fp:
             fp.write(self.render('post', post=post))
+
+    def generate_statics(self):
+        gen_pages = ('templates/top.html', 'templates/index.html', 'templates/archive.html', 'templates/post.html')
+        static_pages = (os.path.basename(fn) for fn in glob('templates/*') if fn not in gen_pages)
+
+        for static in static_pages:
+            print 'Processing', static
+            with codecs.open(self.out + static, 'w', 'utf-8') as fp:
+                fp.write(self.render(os.path.splitext(static)[0]))
 
     def generate_rss(self):
         if 'rss_title' not in self.config or 'rss_description' not in self.config:
