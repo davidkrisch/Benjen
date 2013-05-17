@@ -2,6 +2,7 @@
 
 from glob import glob
 import codecs, datetime, re, shutil, sys, yaml, os.path
+from markdown_lightbox.extension import LightBoxExtension 
 from markdown import Markdown
 from functools import partial
 from mako.lookup import TemplateLookup
@@ -29,7 +30,7 @@ class Benjen(object):
 
     title_sub = partial(re.compile(r'[^a-zA-Z0-9_\-]').sub, '_')
     def load_entries(self):
-        md = Markdown(extensions=['codehilite(guess_lang=False)', 'meta'])
+        md = Markdown(extensions=['codehilite(guess_lang=False)', 'meta', LightBoxExtension()])
         raw = (file(fn, 'r').read().decode('utf-8') for fn in glob('entries/*'))
 
         self.entries = []

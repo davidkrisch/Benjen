@@ -1,1 +1,3 @@
-daeken.com/out/
+*.un~
+*.swp
+*.pyc
