@@ -21,6 +21,7 @@ class Benjen(object):
 
         self.load_entries()
         self.generate_indexes()
+        self.generate_galley()
         map(self.generate_post, self.entries)
         self.generate_statics()
         self.generate_rss()
@@ -34,22 +35,32 @@ class Benjen(object):
         raw = (file(fn, 'r').read().decode('utf-8') for fn in glob('entries/*'))
 
         self.entries = []
+        self.galley_entries = []
+
         for entry in raw:
             html, meta = md.convert(entry), md.Meta
             if 'title' not in meta or 'date' not in meta:
                 continue
             title, date = meta['title'][0], meta['date'][0]
+            tags = meta.get('tags', [])
             print 'Processed', title
 
-            self.entries.append(dict(
+            this_entry = dict(
                 title=title,
                 date=date,
+                tags=tags,
                 raw=entry,
                 html=html,
                 link=date + '_' + self.title_sub(title) + '.html'
-            ))
+            )
+
+            if 'galley' in tags:
+                self.galley_entries.append(this_entry)
+            else:
+                self.entries.append(this_entry)
 
         self.entries.sort(lambda a, b: cmp(b['date'], a['date']))
+        self.galley_entries.sort(lambda a, b: cmp(b['date'], a['date']))
 
     def generate_indexes(self):
         per = self.config['per_page']
@@ -68,6 +79,22 @@ class Benjen(object):
 
         with codecs.open(self.out + 'archive.html', 'w', 'utf-8') as fp:
             fp.write(self.render('archive', posts=self.entries))
+
+    def generate_galley(self):
+        # TODO Remove code duplication
+        per = self.config['per_page']
+        recent = self.galley_entries[:self.config['recent_posts']]
+        genFn = lambda i: 'galley.html' if i == 0 else 'galley_%i.html' % (i / per)
+        for i in xrange(0, len(self.galley_entries), per):
+            with codecs.open(self.out + genFn(i), 'w', 'utf-8') as fp:
+                fp.write(self.render('index',
+                    page=(i / per) + 1,
+                    pages=(len(self.galley_entries) + per - 1) / per,
+                    prev=None if i == 0 else genFn(i - per),
+                    next=None if i + per >= len(self.galley_entries) else genFn(i + per),
+                    posts=self.galley_entries[i:i+per],
+                    recent_posts=recent
+                ))
 
     def generate_post(self, post):
         with codecs.open(self.out + post['link'], 'w', 'utf-8') as fp:
