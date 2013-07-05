@@ -112,6 +112,11 @@ class Benjen(object):
     def generate_rss(self):
         if 'rss_title' not in self.config or 'rss_description' not in self.config:
             return
+
+        all_entries = []
+        all_entries.extend(self.entries)
+        all_entries.extend(self.galley_entries)
+
         RSS2(
             title=self.config['rss_title'], 
             link=self.root_url, 
@@ -124,7 +129,7 @@ class Benjen(object):
                     description=entry['html'], 
                     guid=Guid(self.root_url + entry['link']), 
                     pubDate=datetime.datetime.strptime(entry['date'][:10], '%Y-%m-%d')
-                ) for entry in self.entries
+                ) for entry in all_entries 
             ]
         ).write_xml(file(self.out + 'feed.xml', 'wb'), encoding='utf-8')
 
