@@ -23,6 +23,7 @@ class Benjen(object):
         self.generate_indexes()
         self.generate_galley()
         map(self.generate_post, self.entries)
+        map(self.generate_post, self.galley_entries)
         self.generate_statics()
         self.generate_rss()
     
